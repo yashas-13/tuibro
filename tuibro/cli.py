@@ -60,11 +60,20 @@ def cmd_run(args):
     print()
 
     app = TuibroApp(config)
-    app._initial_task = args.task
-    try:
-        asyncio.run(app.run(task=args.task))
-    except KeyboardInterrupt:
-        print("\n  Goodbye!")
+
+    if getattr(args, 'no_tui', False):
+        # Headless mode — run agent without curses TUI
+        try:
+            result = asyncio.run(app.run_headless(args.task))
+            print(f"\n  Done: {result[:500] if result else 'Complete'}")
+        except KeyboardInterrupt:
+            print("\n  Stopped.")
+    else:
+        app._initial_task = args.task
+        try:
+            asyncio.run(app.run(task=args.task))
+        except KeyboardInterrupt:
+            print("\n  Goodbye!")
 
 
 def cmd_setup(args):
@@ -301,6 +310,8 @@ Keyboard (in TUI):
     p_run.add_argument("--debug", "-d", action="store_true")
     p_run.add_argument("--no-headless", action="store_true")
     p_run.add_argument("--max-iterations", type=int, default=20)
+    p_run.add_argument("--no-tui", action="store_true", help="Run without TUI (headless output)")
+    p_run.add_argument("--engine", "-e", choices=["carbonyl", "playwright"], help="Browser engine")
 
     # setup
     subparsers.add_parser("setup", help="First-time setup")

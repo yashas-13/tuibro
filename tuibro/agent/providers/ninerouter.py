@@ -40,6 +40,8 @@ class NineRouterProvider(BaseProvider):
 
     def _parse_raw(self, body: str) -> dict:
         """Parse response body — JSON possibly followed by SSE trailer like 'data: [DONE]'."""
+        if not body or not body.strip():
+            raise ValueError("Empty response body from 9router")
         # Try direct JSON parse first
         try:
             return json.loads(body)
@@ -92,6 +94,13 @@ class NineRouterProvider(BaseProvider):
             return ProviderResponse(error="No message in choice")
 
         content = msg.get("content") or ""
+        # Some models put output in 'reasoning' when content is null
+        if not content and msg.get("reasoning"):
+            reasoning = msg["reasoning"]
+            if isinstance(reasoning, str):
+                content = reasoning
+            elif isinstance(reasoning, dict):
+                content = reasoning.get("text", "") or reasoning.get("summary", "")
         finish_reason = choice.get("finish_reason", "")
 
         usage_data = data.get("usage") or {}

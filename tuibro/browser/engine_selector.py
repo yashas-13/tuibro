@@ -11,7 +11,7 @@ class EngineType(str, Enum):
 
 
 # Module-level state: which engine we're using
-_active_engine: EngineType = EngineType.CARBONYL
+_active_engine: EngineType = EngineType.PLAYWRIGHT
 _carbonyl_available: bool | None = None  # None = not checked yet
 
 
@@ -30,16 +30,20 @@ def get_engine() -> EngineType:
 
 
 def check_carbonyl_available() -> bool:
-    """Check if the Carbonyl binary is available."""
+    """Check if the Carbonyl binary is available and working."""
     global _carbonyl_available
     if _carbonyl_available is not None:
         return _carbonyl_available
     try:
         from carbonyl_agent import CarbonylBrowser
-        # Quick check: try instantiating
+        # Quick smoke test: try instantiating and opening blank page
+        b = CarbonylBrowser()
+        b.open("about:blank")
+        b.drain(1.0)
+        b.close()
         _carbonyl_available = True
         return True
-    except (ImportError, FileNotFoundError):
+    except (ImportError, FileNotFoundError, Exception):
         _carbonyl_available = False
         return False
 

@@ -68,6 +68,64 @@ class TuibroApp:
         finally:
             await self.engine.stop()
 
+    async def run_headless(self, task: str = None) -> str:
+        """Run agent task without TUI — for CLI/scripting/non-interactive use."""
+        self._loop = asyncio.get_event_loop()
+        self._init_provider()
+
+        if not self.provider:
+            return "Error: No provider configured. Set an API key first."
+
+        try:
+            await self.engine.start()
+        except Exception as e:
+            return f"Error: Browser failed to start: {e}"
+
+        self.agent = AgentCore(self.provider, self.engine, self.config.max_iterations)
+        actions = []
+        events = []
+
+        def on_action(action, result):
+            actions.append(f"  {action}")
+            print(f"  ACTION: {action}")
+
+        def on_msg(text):
+            print(f"  AGENT: {text[:200]}")
+
+        def on_err(err):
+            print(f"  ERROR: {err}")
+
+        def on_page(page, act):
+            pass
+
+        def on_status(status):
+            print(f"  STATUS: {status}")
+
+        def on_event(event):
+            events.append(str(event))
+
+        self.agent.on_action = on_action
+        self.agent.on_agent_message = on_msg
+        self.agent.on_error = on_err
+        self.agent.on_page_update = on_page
+        self.agent.on_status_change = on_status
+        self.engine.on_event = on_event
+
+        try:
+            print(f"\n  Task: {task}")
+            print(f"  Provider: {self.config.provider} | Model: {self.config.model}")
+            print(f"  {'─' * 50}")
+            result = await self.agent.run_task(task)
+            print(f"  {'─' * 50}")
+            print(f"\n  Result: {result}")
+            print(f"  Actions: {len(actions)}")
+            print(f"  Events: {len(events)}")
+            return result
+        except Exception as e:
+            return f"Agent error: {e}"
+        finally:
+            await self.engine.stop()
+
     def _init_provider(self):
         api_key = self.config.get_api_key()
         if not api_key:
