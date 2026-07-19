@@ -366,7 +366,7 @@ class TuibroApp:
         self.agent.on_error = on_error
         self.agent.on_page_update = on_page_update
         self.agent.on_status_change = on_status
-        self.browser.on_event = lambda e: None  # events already wired
+        self.engine.on_event = self._on_browser_event  # ensure events wired
 
         def run_in_thread():
             loop = asyncio.new_event_loop()
