@@ -15,6 +15,7 @@ class Config:
     provider: str = "openai"
     model: str = "gpt-4o"
     headless: bool = True
+    browser_engine: str = "carbonyl"
     slow_mo: int = 0
     max_iterations: int = 20
     chat_ratio: float = 0.4

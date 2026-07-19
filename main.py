@@ -20,6 +20,7 @@ def parse_args():
     parser.add_argument("--model", default=None, help="Model name")
     parser.add_argument("--task", default=None, help="Task for the agent to execute autonomously")
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
+    parser.add_argument("--engine", "-e", choices=["carbonyl", "playwright"], help="Browser engine (default: carbonyl)")
     parser.add_argument("--no-headless", action="store_true", help="Show browser window")
     parser.add_argument("--max-iterations", type=int, default=20, help="Max agent iterations")
     return parser.parse_args()
@@ -35,6 +36,8 @@ def main():
         config.model = args.model
     if args.debug:
         config.debug = True
+    if args.engine:
+        config.browser_engine = args.engine
     if args.no_headless:
         config.headless = False
     if args.max_iterations:

@@ -11,7 +11,8 @@ from tuibro.tui.chat_pane import ChatPane
 from tuibro.tui.browser_pane import BrowserPane
 from tuibro.tui.status_bar import render_status_line
 from tuibro.tui.theme import setup_colors, PAIR_SYSTEM
-from tuibro.browser.engine import BrowserEngine, PageInfo, BrowserEvent
+from tuibro.browser.engine import PageInfo, BrowserEvent
+from tuibro.browser.engine_selector import create_engine, EngineType, check_carbonyl_available
 from tuibro.agent.core import AgentCore
 from tuibro.agent.providers import import_all, get_provider, list_providers
 from tuibro.agent.prompts import get_search_prompt
@@ -24,11 +25,12 @@ class TuibroApp:
         self.config = config
         self.chat = ChatPane()
         self.browser_view = BrowserPane()
-        self.engine = BrowserEngine(
+        self.engine = create_engine(
             headless=config.headless,
             slow_mo=config.slow_mo,
             viewport_width=config.viewport_width,
             viewport_height=config.viewport_height,
+            preferred=config.browser_engine,
         )
         import_all()
         self.provider = None

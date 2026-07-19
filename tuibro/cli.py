@@ -42,6 +42,8 @@ def cmd_run(args):
         config.model = args.model
     if args.debug:
         config.debug = True
+    if args.engine:
+        config.browser_engine = args.engine
     if args.no_headless:
         config.headless = False
     if args.max_iterations:
@@ -52,7 +54,7 @@ def cmd_run(args):
 
     print_banner()
     print(f"  Provider: {config.provider} | Model: {config.model}")
-    print(f"  Browser: {'headless' if config.headless else 'visible'}")
+    print(f"  Engine: {config.browser_engine} | {'headless' if config.headless else 'visible'}")
     if args.task:
         print(f"  Task: {args.task[:60]}...")
     print()
@@ -288,6 +290,7 @@ Keyboard (in TUI):
     parser.add_argument("--provider", "-p", help="LLM provider")
     parser.add_argument("--model", "-m", help="Model name")
     parser.add_argument("--debug", "-d", action="store_true", help="Debug mode")
+    parser.add_argument("--engine", "-e", choices=["carbonyl", "playwright"], help="Browser engine (default: carbonyl)")
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
     # run
