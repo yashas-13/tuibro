@@ -548,6 +548,56 @@ pip install -e ".[dev]"
 
 ---
 
+## 🙏 Tributes
+
+Tuibro stands on the shoulders of giants. These open source projects made it possible.
+
+### Core Dependencies
+
+- **[Playwright](https://github.com/microsoft/playwright)** · [playwright.dev](https://playwright.dev) — Browser automation backbone. Launches Chromium, navigates pages, clicks elements, extracts the DOM tree. The foundation of Tuibro's browser engine.
+
+- **[httpx](https://github.com/encode/httpx)** · [python-httpx.org](https://www.python-httpx.org) — Async HTTP client. Every LLM API call across all 12 providers flows through httpx.
+
+- **[Carbonyl](https://github.com/jmagly/carbonyl-agent)** — Text-native headless browser, agent-optimized alternative to Playwright. Renders pages as text for faster, lighter agent interaction.
+
+- **Python curses** · [docs.python.org/3/library/curses.html](https://docs.python.org/3/library/curses.html) — Built-in TUI rendering. Split panes, color pairs, keyboard handling — the visual backbone of the terminal interface.
+
+### LLM Ecosystem
+
+- **[OpenAI](https://github.com/openai/openai-python)** · [platform.openai.com/docs](https://platform.openai.com/docs) — Pioneered the function/tool calling API format that Tuibro's 12 providers follow.
+
+- **[Anthropic](https://github.com/anthropics/anthropic-sdk-python)** · [docs.anthropic.com](https://docs.anthropic.com) — Claude's tool use format. Tuibro's Anthropic provider adapts this for browser automation.
+
+- **[9router](https://www.npmjs.com/package/9router)** — Combo model router providing 464+ models through a single localhost endpoint. The default provider for Tuibro.
+
+- **[Ollama](https://github.com/ollama/ollama)** · [ollama.com](https://ollama.com) — Local model serving. Inspired Tuibro's BYOK (Bring Your Own Key) approach — your models, your rules.
+
+### Inspiration
+
+- **[Open Interpreter](https://github.com/OpenInterpreter/open-interpreter)** · [openinterpreter.com](https://openinterpreter.com) — Showed the world that AI agents can control computers from a terminal. The core idea behind Tuibro.
+
+- **[Aider](https://github.com/paul-gauthier/aider)** · [aider.chat](https://aider.chat) — Terminal-native AI coding. Inspired Tuibro's CLI-first design, provider cycling, and model switching.
+
+- **[Claude Code](https://github.com/anthropics/claude-code)** · [docs.anthropic.com/claude-code](https://docs.anthropic.com/claude-code) — Terminal agent pattern. The observe → think → act loop and tool calling architecture that Tuibro follows.
+
+- **[Codex CLI](https://github.com/openai/codex)** · [openai.com/index/codex-cli](https://openai.com/index/codex-cli) — Terminal-native agent execution. Influenced Tuibro's headless `--no-tui` mode.
+
+- **[Browser Use](https://github.com/browser-use/browser-use)** · [browser-use.com](https://browser-use.com) — AI browser automation patterns. Influenced the DOM element indexing and action loop.
+
+- **[Textual](https://github.com/Textualize/textual)** · [textual.textualize.io](https://textual.textualize.io) — TUI framework. Inspired the split-pane layout and real-time update architecture.
+
+- **[Rich](https://github.com/Textualize/rich)** · [rich.readthedocs.io](https://rich.readthedocs.io) — Terminal rendering. Inspired the color theme and Unicode box-drawing characters.
+
+### Infrastructure
+
+- **[Termux](https://github.com/termux/termux-app)** · [termux.dev](https://termux.dev) — Android terminal emulator. Makes TUI apps like Tuibro possible on mobile.
+
+- **[proot-distro](https://github.com/proot-me/proot-distro)** — Linux environments on Android. Tuibro runs inside proot Ubuntu on phones and tablets.
+
+- **[Chromium](https://chromium.googlesource.com/chromium/src)** · [chromium.org](https://www.chromium.org) — The browser engine. Playwright controls Chromium under the hood.
+
+---
+
 ## 📜 Licence
 
 MIT — use it however you want. Commercial, personal, educational. No restrictions.
