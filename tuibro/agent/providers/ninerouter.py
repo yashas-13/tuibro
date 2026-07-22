@@ -18,25 +18,48 @@ class NineRouterProvider(BaseProvider):
     def _headers(self) -> dict:
         return {"Content-Type": "application/json", "Authorization": f"Bearer {self.api_key}"}
 
-    async def complete(self, messages, tools=None):
+    async def complete(self, messages, tools=None, max_retries: int = 3):
         payload = {"model": self.model, "messages": messages}
         if tools:
             payload["tools"] = tools
             payload["tool_choice"] = "auto"
-        try:
-            async with httpx.AsyncClient(timeout=120.0) as client:
-                resp = await client.post(
-                    f"{self.base_url}/chat/completions",
-                    headers=self._headers(),
-                    json=payload,
-                )
-                if resp.status_code != 200:
-                    return ProviderResponse(error=f"HTTP {resp.status_code}: {resp.text[:300]}")
-                return self._parse_response(resp.text)
-        except httpx.ConnectError:
-            return ProviderResponse(error="9router not running. Start with: 9router")
-        except Exception as e:
-            return ProviderResponse(error=str(e))
+
+        last_error = None
+        for attempt in range(max_retries):
+            try:
+                async with httpx.AsyncClient(timeout=120.0) as client:
+                    resp = await client.post(
+                        f"{self.base_url}/chat/completions",
+                        headers=self._headers(),
+                        json=payload,
+                    )
+                    if resp.status_code == 200:
+                        return self._parse_response(resp.text)
+                    elif resp.status_code >= 500:
+                        # Server error — retry
+                        last_error = f"HTTP {resp.status_code}: {resp.text[:200]}"
+                        import asyncio
+                        await asyncio.sleep(2 ** attempt)
+                        continue
+                    else:
+                        return ProviderResponse(error=f"HTTP {resp.status_code}: {resp.text[:300]}")
+            except httpx.ConnectError:
+                last_error = "9router not running"
+                import asyncio
+                await asyncio.sleep(2 ** attempt)
+                continue
+            except httpx.ReadTimeout:
+                last_error = "Request timed out"
+                import asyncio
+                await asyncio.sleep(2 ** attempt)
+                continue
+            except Exception as e:
+                last_error = str(e)
+                import asyncio
+                await asyncio.sleep(1)
+                continue
+
+        return ProviderResponse(error=f"9router failed after {max_retries} attempts: {last_error}")
 
     def _parse_raw(self, body: str) -> dict:
         """Parse response body — JSON possibly followed by SSE trailer like 'data: [DONE]'."""

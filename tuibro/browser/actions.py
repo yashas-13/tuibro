@@ -270,6 +270,37 @@ TOOL_DEFINITIONS = [
 
 async def execute_tool(tool_name: str, arguments: dict, engine) -> str:
     """Execute a browser tool call and return a result string."""
+    # Coerce missing required parameters from available args
+    if tool_name == "navigate" and "url" not in arguments:
+        for v in arguments.values():
+            if isinstance(v, str) and ("http" in v or "www" in v):
+                arguments["url"] = v
+                break
+    elif tool_name == "evaluate_js" and "expression" not in arguments:
+        for v in arguments.values():
+            if isinstance(v, str) and len(v) > 2:
+                arguments["expression"] = v
+                break
+    elif tool_name == "scroll" and "direction" not in arguments:
+        arguments["direction"] = "down"
+    elif tool_name in ("click", "type_text", "get_element_text", "get_element_attribute") and "element_index" not in arguments:
+        for v in arguments.values():
+            if isinstance(v, int):
+                arguments["element_index"] = v
+                break
+    elif tool_name == "switch_tab" and "index" not in arguments:
+        for v in arguments.values():
+            if isinstance(v, int):
+                arguments["index"] = v
+                break
+    elif tool_name == "done" and "answer" not in arguments:
+        for v in arguments.values():
+            if isinstance(v, str) and len(v) > 2:
+                arguments["answer"] = v
+                break
+        if "answer" not in arguments:
+            arguments["answer"] = "Task complete."
+
     try:
         # ── Navigation ──
         if tool_name == "navigate":

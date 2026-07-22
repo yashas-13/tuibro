@@ -38,6 +38,39 @@ class AgentCore:
     def reset(self):
         self._messages = []
         self._iteration = 0
+        self._consecutive_errors = 0
+
+    async def _restart_9router(self) -> bool:
+        """Try to restart 9router server."""
+        import subprocess
+        import shutil
+        try:
+            # Kill existing processes
+            subprocess.run(["pkill", "-f", "custom-server"], capture_output=True, timeout=5)
+            await asyncio.sleep(2)
+
+            # Find node
+            node = shutil.which("node")
+            if not node:
+                return False
+
+            # Start 9router
+            subprocess.Popen(
+                ["node", "/usr/local/lib/node_modules/9router/app/custom-server.js"],
+                env={**__import__("os").environ, "PORT": "20128", "HOST": "0.0.0.0"},
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            await asyncio.sleep(5)
+
+            # Verify it's running
+            import httpx
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                resp = await client.get("http://localhost:20128/v1/models")
+                return resp.status_code == 200
+        except Exception as e:
+            logger.error("9router restart failed: %s", e)
+            return False
 
     async def run_task(self, task: str) -> str:
         """Execute a user task autonomously."""
@@ -101,8 +134,31 @@ class AgentCore:
 
             if response.error:
                 self._notify_error(f"Provider error: {response.error}")
-                await asyncio.sleep(1)
+                # Track consecutive errors
+                consecutive_errors = getattr(self, '_consecutive_errors', 0) + 1
+                self._consecutive_errors = consecutive_errors
+
+                if consecutive_errors >= 3:
+                    self._notify_error("Too many consecutive provider errors. Stopping.")
+                    break
+
+                # Auto-restart 9router if it's not running
+                if "not running" in response.error.lower() or "connect" in response.error.lower():
+                    self._notify_status("Restarting 9router...")
+                    restarted = await self._restart_9router()
+                    if restarted:
+                        self._notify_status("9router restarted successfully")
+                        self._consecutive_errors = 0
+                    else:
+                        self._notify_error("Failed to restart 9router")
+
+                # Exponential backoff: 1s, 2s, 4s
+                wait_time = min(2 ** consecutive_errors, 8)
+                await asyncio.sleep(wait_time)
                 continue
+
+            # Reset consecutive errors on success
+            self._consecutive_errors = 0
 
             # Add assistant message
             assistant_msg = {"role": "assistant", "content": response.content}

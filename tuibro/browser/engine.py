@@ -149,20 +149,55 @@ class BrowserEngine:
                 "--disable-setuid-sandbox", "--single-process",
                 "--disable-extensions", "--disable-background-networking",
                 "--disable-default-apps", "--no-first-run",
+                # Stealth: bypass headless detection
+                "--disable-blink-features=AutomationControlled",
+                "--disable-features=IsolateOrigins,site-per-process",
+                "--flag-switches-begin",
+                "--flag-switches-end",
             ],
         )
         self._context = await self._browser.new_context(
             viewport={"width": self.viewport_width, "height": self.viewport_height},
             user_agent=(
-                "Mozilla/5.0 (Linux; Android 14; Pixel 8) "
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                 "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/120.0.0.0 Mobile Safari/537.36"
+                "Chrome/131.0.0.0 Safari/537.36"
             ),
+            locale="en-US",
+            timezone_id="America/New_York",
+            extra_http_headers={
+                "Accept-Language": "en-US,en;q=0.9",
+                "sec-ch-ua": '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+                "sec-ch-ua-mobile": "?0",
+                "sec-ch-ua-platform": '"Windows"',
+            },
         )
+        # Stealth: inject anti-detection scripts
+        await self._context.add_init_script("""
+            // Override webdriver property
+            Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
+            // Override chrome property
+            window.chrome = {runtime: {}, loadTimes: function(){}, csi: function(){}, app: {}};
+            // Override permissions
+            const originalQuery = window.navigator.permissions.query;
+            window.navigator.permissions.query = (parameters) => (
+                parameters.name === 'notifications' ?
+                    Promise.resolve({state: Notification.permission}) :
+                    originalQuery(parameters)
+            );
+            // Override plugins
+            Object.defineProperty(navigator, 'plugins', {
+                get: () => [1, 2, 3, 4, 5],
+            });
+            // Override languages
+            Object.defineProperty(navigator, 'languages', {
+                get: () => ['en-US', 'en'],
+            });
+        """)
         first_page = await self._context.new_page()
         self._tabs = [Tab(index=0, page=first_page, is_active=True, title="New Tab")]
         self._active_tab_idx = 0
-        self._emit(EventType.INFO, "Browser started")
+        self._emit(EventType.INFO, "Browser started (stealth mode)")
         logger.info("Browser started (headless=%s)", self.headless)
 
     async def stop(self):

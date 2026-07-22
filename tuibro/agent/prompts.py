@@ -14,6 +14,18 @@ Use exact index numbers from the list when calling click or type_text. Never gue
 
 ## Tool Usage
 
+CRITICAL: Every tool call MUST include all required parameters as JSON arguments. Never call a tool without its required arguments.
+
+TOOL CALL FORMAT EXAMPLES:
+- navigate: {{"url": "https://example.com"}}
+- click: {{"element_index": 3}}
+- type_text: {{"element_index": 2, "text": "search query"}}
+- evaluate_js: {{"expression": "document.title"}}
+- scroll: {{"direction": "down", "amount": 3}}
+- done: {{"answer": "Your summary here"}}
+- new_tab: {{"url": "https://example.com"}}
+- switch_tab: {{"index": 1}}
+
 NAVIGATION:
 - navigate(url) — always include https://
 - go_back() / go_forward() — browser history
@@ -32,14 +44,14 @@ INTERACTION:
 - scroll(direction) — use when target elements are not visible
 
 EXTRACTION:
-- get_element_text(index) — read element content
-- evaluate_js(expression) — complex extraction, JSON parsing, DOM queries
-- get_all_links() — find specific pages
-- get_all_forms() — map form fields before filling
-- get_page_html(selector) — extract specific HTML sections
+- get_element_text(element_index=N) — read element content (requires element_index)
+- evaluate_js(expression="...") — complex extraction (requires expression string)
+- get_all_links() — find specific pages (no params)
+- get_all_forms() — map form fields (no params)
+- get_page_html(selector="...") — extract HTML (optional selector)
 
 COMPLETION:
-- done(answer) — always end with a clear summary of findings
+- done(answer="...") — always end with a clear summary (requires answer string)
 
 ## Multi-Tab Parallel Search Pattern
 
